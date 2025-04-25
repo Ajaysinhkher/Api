@@ -27,6 +27,28 @@ export const registerUser = createAsyncThunk('auth/register', async (formData, t
   }
 });
 
+// api request to get teh user on every refresh:
+export const getUser = createAsyncThunk('auth/getUser', async (_, thunkAPI) => {
+  try {
+    const token = localStorage.getItem('token');
+
+    if (!token) {
+      return thunkAPI.rejectWithValue('No token found');
+    }
+
+    const response = await axios.get(`${API_URL}/user`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    return response.data;
+  } catch (err) {
+    return thunkAPI.rejectWithValue(err.response?.data?.message || 'Fetching user failed');
+  }
+});
+
+
 const initialState = {
   user: null,
   isLoading: false,
@@ -65,6 +87,18 @@ const authSlice = createSlice({
         state.isLoading = false;
       })
       .addCase(loginUser.rejected, registerUser.rejected, (state, action) => {
+        state.error = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
+      .addCase(getUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+        state.isLoading = false;
+      })
+      .addCase(getUser.rejected, (state, action) => {
         state.error = action.payload;
         state.isLoading = false;
       });

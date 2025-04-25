@@ -1,7 +1,9 @@
 import React,{useEffect} from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector,useDispatch } from 'react-redux';
-import {getNotes} from '../../features/noteSlice';
+import {getNotes,deleteNote} from '../../features/noteSlice';
+import Skeleton from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
 
 
 
@@ -21,14 +23,24 @@ const {notes,status} = useSelector((state) => state.note);
 //   console.log("Updated notes state:", notes);
 // }, [notes]);
 
-useEffect(() => {
-  if(user?.id)
-  dispatch(getNotes(user.id));
-}, [dispatch,user?.id]);
+  useEffect(() => {
+    if(user?.id)
+    dispatch(getNotes(user.id));
+  }, [dispatch,user?.id]);
  
   const handleCreatenote = ()=>{
     navigate('/layout/create');
   };
+
+  const handleDelete = (id)=>{
+    if (window.confirm('Are you sure you want to delete this note?')) {
+      dispatch(deleteNote(id));
+    }
+  };
+  
+  // const handleEdit = (noteId) => {
+  //   navigate(`/layout/edit/${noteId}`);
+  // };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -38,8 +50,8 @@ useEffect(() => {
         <div className="w-1/2 border-r pr-6">
           <h2 className="text-2xl font-bold mb-4">User Data</h2>
           <div className="space-y-2">
-            <p><span className="font-semibold">Name:</span>{user?.name}</p>
-            <p><span className="font-semibold">Email:</span> {user?.email}</p>
+            <p><span className="font-semibold">Name:</span>{user?.name ||<Skeleton />}</p>
+            <p><span className="font-semibold">Email:</span> {user?.email ||<Skeleton />}</p>
           </div>
           <button onClick = {handleCreatenote} className="mt-6 bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition">
             Create Note
@@ -51,15 +63,22 @@ useEffect(() => {
           <h2 className="text-2xl font-bold mb-4">User Notes</h2>
           <ul className="space-y-4">
             {status === 'loading' ? (
-              <p>Loading notes...</p>
+              <p>Loading notes...<Skeleton  count={5}/></p>
+              
             ) : notes.length === 0 ? (
               <p>No notes found.</p>
             ) : (
               notes.map((note) => (
-                <li key={note.id} className="bg-gray-100 p-4 rounded shadow-sm">
+                <li key={note.id} className="bg-gray-100 p-4 rounded shadow-sm flex justify-between items-start">
+                <div>
                   <h3 className="font-semibold text-lg">{note.title}</h3>
                   <p className="text-sm text-gray-700">{note.content}</p>
-                </li>
+                </div>
+                <div className="flex gap-4 ml-4 py-4">
+                  <button onClick={() => handleEdit(note.id)} className="text-blue-500 hover:underline">Edit</button>
+                  <button onClick={() => handleDelete(note.id)} className="text-red-500 hover:underline">Delete</button>
+                </div>
+              </li>
               ))
             )}
           </ul>
