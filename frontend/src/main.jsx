@@ -25,7 +25,7 @@ const router = createBrowserRouter([
             {
                 path:"create",
                 Component:CreateNote,
-            },        
+            },      
             
         ]
         

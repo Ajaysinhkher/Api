@@ -1,10 +1,9 @@
-import React,{useEffect} from 'react';
+import React,{useState,useEffect} from 'react';
 import { useNavigate } from 'react-router';
 import { useSelector,useDispatch } from 'react-redux';
-import {getNotes,deleteNote} from '../../features/noteSlice';
+import {getNotes,deleteNote,updateNote} from '../../features/noteSlice';
 import Skeleton from 'react-loading-skeleton'
 import 'react-loading-skeleton/dist/skeleton.css'
-
 
 
 function Dashboard() {
@@ -14,8 +13,9 @@ function Dashboard() {
  const dispatch = useDispatch();
  const {user} = useSelector((state)=>state.auth);
  
-//  console.log((user));  getting user here as an object use it further to display user
-
+//console.log((user));  getting user here as an object use it further to display user
+const [isModalOpen, setIsModalOpen] = useState(false);
+const [currentNote, setCurrentNote] = useState({ id: '', title: '', content: '' });
 
 const {notes,status} = useSelector((state) => state.note);
 
@@ -33,14 +33,30 @@ const {notes,status} = useSelector((state) => state.note);
   };
 
   const handleDelete = (id)=>{
-    if (window.confirm('Are you sure you want to delete this note?')) {
+    if(window.confirm('Are you sure you want to delete this note?')) {
       dispatch(deleteNote(id));
     }
   };
   
-  // const handleEdit = (noteId) => {
-  //   navigate(`/layout/edit/${noteId}`);
-  // };
+  const handleEdit = (note) => {
+    setCurrentNote(note);
+    console.log(currentNote);
+    
+    setIsModalOpen(true);
+  };
+
+  const handleModalChange = (e) => {
+    const { name, value } = e.target;
+    setCurrentNote((prev) => ({
+      ...prev,
+      [name]: value,
+    }));
+  };
+
+  const handleModalSave = () => {
+    dispatch(updateNote(currentNote)); // Dispatch update
+    setIsModalOpen(false);
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
@@ -75,15 +91,52 @@ const {notes,status} = useSelector((state) => state.note);
                   <p className="text-sm text-gray-700">{note.content}</p>
                 </div>
                 <div className="flex gap-4 ml-4 py-4">
-                  <button onClick={() => handleEdit(note.id)} className="text-blue-500 hover:underline">Edit</button>
+                  <button onClick={() => handleEdit(note)} className="text-blue-500 hover:underline">Edit</button>
                   <button onClick={() => handleDelete(note.id)} className="text-red-500 hover:underline">Delete</button>
                 </div>
               </li>
               ))
             )}
           </ul>
-
         </div>
+                {/* Edit Modal */}
+                {isModalOpen && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
+            <div className="bg-white p-6 rounded-lg shadow-md w-96">
+              <h2 className="text-xl font-bold mb-4">Edit Note</h2>
+              <input
+                type="text"
+                name="title"
+                value={currentNote.title}
+                onChange={handleModalChange}
+                className="w-full border p-2 mb-4 rounded"
+                placeholder="Title"
+              />
+              <textarea
+                name="content"
+                value={currentNote.content}
+                onChange={handleModalChange}
+                className="w-full border p-2 mb-4 rounded"
+                placeholder="Content"
+                rows="4"
+              />
+              <div className="flex justify-end gap-4">
+                <button
+                  onClick={() => setIsModalOpen(false)}
+                  className="bg-gray-400 text-white px-4 py-2 rounded hover:bg-gray-500"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleModalSave}
+                  className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                >
+                  Save
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

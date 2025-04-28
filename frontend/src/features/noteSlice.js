@@ -41,6 +41,27 @@ export const getNotes = createAsyncThunk('notes/get',
     }
 );
 
+export const updateNote = createAsyncThunk(
+  'note/updateNote',
+  async (noteData, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem('token');
+      const response = await axios.put(`${API_URL}/update/${noteData.id}`, noteData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      console.log("updated daat:", response.notes);
+      
+      return response.data.note; // return updated note
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+
+
 export const deleteNote = createAsyncThunk('notes/delete', async (noteId, thunkAPI) => {
   const token = localStorage.getItem('token');
   await axios.delete(`${API_URL}/delete/${noteId}`, {
@@ -100,7 +121,22 @@ const noteSlice = createSlice({
       .addCase(deleteNote.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload;
-      });
+      })
+      .addCase(updateNote.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(updateNote.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // Find the note and update it
+        const index = state.notes.findIndex(note => note.id === action.payload.id);
+        if (index !== -1) {
+          state.notes[index] = action.payload;
+        }
+      })
+      .addCase(updateNote.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload;
+      })
   },
 });
 

@@ -43,7 +43,7 @@ class NoteController extends Controller
     public function update(Request $request, $id){
         $note = Note::find($id);
 
-        if(!note)
+        if(!$note)
         {
             return response()->json(['error'=>'Note not found'],404);
         }
